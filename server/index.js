@@ -1,12 +1,13 @@
 /**
  * server/index.js — entry point.
  *
- * Serves the static client and (from Phase 2) upgrades to WebSocket on the
- * same port. Keep it dependency-light: Node's http module only.
+ * Serves the static client AND the WebSocket endpoint on the same port: one
+ * process, no CORS, no build step. Node's http module + `ws` only.
  */
 import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createGameServer } from './net.js';
 import { createStaticHandler } from './static.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -22,6 +23,16 @@ const serveStatic = createStaticHandler(ROOT, {
 
 const server = createServer((req, res) => {
   serveStatic(req, res);
+});
+
+const game = createGameServer(server, {
+  onMatchReady: players => {
+    // Phase 4 replaces this placeholder with the authoritative match. Until
+    // then, return the room to the lobby so the countdown flow can be demoed
+    // and re-run.
+    console.log(`countdown finished — match start lands in Phase 4 (${players.length} players)`);
+    game.room.reset();
+  },
 });
 
 server.listen(PORT, () => {

@@ -16,7 +16,7 @@ export const MSG = Object.freeze({
 
   // server → client
   WELCOME: 'welcome', // { id, nickname, color, slot }
-  LOBBY: 'lobby', // { players: [{id, nickname, slot}], countdown: null | seconds }
+  LOBBY: 'lobby', // { players: [{id, nickname, slot}], state, countdown: null | seconds }
   CHAT_MSG: 'chatMessage', // { from, text, ts }
   GAME_START: 'gameStart', // { map: { cols, rows, tiles, spawns }, players, you }
   SNAPSHOT: 'snapshot', // { tick, players, bombs, explosions, blocksDestroyed, powerups }
