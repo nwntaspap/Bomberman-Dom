@@ -1,0 +1,28 @@
+{
+  "name": "bomberman-dom",
+  "version": "1.0.0",
+  "description": "Multiplayer Bomberman built with a from-scratch mini-framework and WebSockets (no canvas/WebGL)",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test"
+  },
+  "author": "nwntaspap",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.9.0",
+    "prettier": "^3.9.6"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
