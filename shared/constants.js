@@ -8,6 +8,7 @@
 export const MAX_PLAYERS = 4;
 export const MIN_PLAYERS_TO_START = 2;
 export const START_LIVES = 3;
+export const MATCH_END_RESET_MS = 4_000; // how long the result stays on screen before the room reopens
 
 // ---- Map ------------------------------------------------------------------
 export const MAP_COLS = 15;
@@ -27,7 +28,9 @@ export const LOBBY_WAIT_MS = 20_000; // window to fill the room before forcing a
 export const COUNTDOWN_MS = 10_000; // "get ready" countdown before the match starts
 
 // ---- Simulation (server) ----------------------------------------------------
-export const SIM_TICK_MS = 1000 / 60; // fixed-timestep target (refined in Phase 4)
+// 30 Hz authoritative tick + one snapshot per tick (30 Hz), client interpolates
+// between snapshots — see docs/specs/netcode-timings.md.
+export const SIM_TICK_MS = 1000 / 30;
 export const BOMB_FUSE_MS = 2_000; // time from placement to explosion
 export const EXPLOSION_MS = 400; // how long flames stay visible/lethal
 export const BASE_MOVE_MS = 140; // time to step one tile at base speed

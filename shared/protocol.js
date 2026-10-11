@@ -19,9 +19,15 @@ export const MSG = Object.freeze({
   LOBBY: 'lobby', // { players: [{id, nickname, slot}], state, countdown: null | seconds }
   CHAT_MSG: 'chatMessage', // { from, text, ts }
   GAME_START: 'gameStart', // { map: { cols, rows, tiles, spawns }, players, you }
-  SNAPSHOT: 'snapshot', // { tick, players, bombs, explosions, blocksDestroyed, powerups }
-  LIFE_LOST: 'lifeLost', // { id, livesLeft }
-  ELIMINATED: 'eliminated', // { id }
+  SNAPSHOT: 'snapshot', // { tick, state, players, bombs, explosions, blocksDestroyed, powerups }
+  // players: [{ id, x, y (px), dir, moving, lives, alive, respawnUntil, powerups: {bombs, flames, speed} }]
+  // bombs: [{ id, x, y (px), ownerId, fuseAt }] · explosions: [{ x, y (px), until }]
+  // blocksDestroyed: [{ x, y (px) }] (only newly destroyed this tick)
+  // powerups: [{ id, x, y (px), type }] · state: 'running' | 'over'
+  // Removed entities (exploded bombs, picked-up powerups) are inferred from
+  // their absence in the next snapshot; no explicit remove messages.
+  LIFE_LOST: 'lifeLost', // { id, livesLeft } — optional; snapshots already carry lives
+  ELIMINATED: 'eliminated', // { id } — optional; snapshots already carry alive
   GAME_OVER: 'gameOver', // { winnerId }
   ERROR: 'error', // { code, message }
 });

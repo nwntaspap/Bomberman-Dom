@@ -27,15 +27,7 @@ const server = createServer((req, res) => {
   serveStatic(req, res);
 });
 
-const game = createGameServer(server, {
-  onMatchReady: players => {
-    // Phase 4 replaces this placeholder with the authoritative match. Until
-    // then, return the room to the lobby so the countdown flow can be demoed
-    // and re-run.
-    console.log(`countdown finished — match start lands in Phase 4 (${players.length} players)`);
-    game.room.reset();
-  },
-});
+createGameServer(server);
 
 server.listen(PORT, () => {
   console.log(`Bomberman-Dom listening on http://localhost:${PORT}`);

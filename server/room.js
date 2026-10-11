@@ -44,8 +44,9 @@ const OPEN = 1; // ws.readyState for an open connection
  * @param {object} [options]
  * @param {() => number} [options.now] - clock, injectable for tests
  * @param {number} [options.tickMs] - auto-tick interval in ms; 0 disables it
- * @param {((players: Array<{id: number, nickname: string, slot: number}>) => void)|null} [options.onMatchReady]
- *   called when the countdown reaches 0; when null the room resets to waiting
+ * @param {((roster: Array<{id: number, nickname: string, slot: number, color: string, ws: object}>) => void)|null} [options.onMatchReady]
+ *   called with the full roster when the countdown reaches 0; when null the
+ *   room resets to waiting
  */
 export function createRoom({ now = Date.now, tickMs = 100, onMatchReady = null } = {}) {
   /** @type {Map<number, {id: number, nickname: string, slot: number, color: string, ws: object}>} */
@@ -64,6 +65,11 @@ export function createRoom({ now = Date.now, tickMs = 100, onMatchReady = null }
 
   function playerList() {
     return [...players.values()].map(p => ({ id: p.id, nickname: p.nickname, slot: p.slot }));
+  }
+
+  /** Full roster entries (incl. ws and color) — handed to the match at start. */
+  function getRoster() {
+    return [...players.values()];
   }
 
   function lobbyMsg() {
@@ -124,7 +130,7 @@ export function createRoom({ now = Date.now, tickMs = 100, onMatchReady = null }
     lastLobby = ''; // state changed: force a fresh payload
     broadcastLobby();
     if (onMatchReady) {
-      onMatchReady(playerList());
+      onMatchReady(getRoster());
     } else {
       resetToWaiting();
       broadcastLobby();
@@ -253,6 +259,7 @@ export function createRoom({ now = Date.now, tickMs = 100, onMatchReady = null }
     broadcastLobby,
     getState: () => state,
     getPlayers: playerList,
+    getRoster,
     playerCount: () => players.size,
   };
 }
