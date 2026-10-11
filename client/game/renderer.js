@@ -111,7 +111,9 @@ export function createRenderer(root, map, players) {
   const bombEls = new Map(); // bomb id -> node
   const flameEls = new Map(); // "x,y" -> node
   const powerupEls = new Map(); // powerup id -> node
-  const playerEls = new Map(); // player id -> node
+  // player id -> { node, dir, moving, invuln }: the last values written to the
+  // DOM are cached so the frame loop never rewrites an unchanged attribute.
+  const playerEls = new Map();
 
   const bombPool = createPool(() => {
     const node = el('sprite bomb');
@@ -134,6 +136,11 @@ export function createRenderer(root, map, players) {
   // ---- snapshot buffer + interpolation -------------------------------------
   /** @type {Array<{recvAt: number, snap: object}>} */
   const buffer = [];
+
+  // Scratch containers reused every frame so `render` stays allocation-free
+  // (PLAN §3: the frame loop must not add GC pressure).
+  const prevById = new Map(); // id -> player in the `from` snapshot
+  const seenIds = new Set(); // ids present in the `to` snapshot
 
   function removeBlocks(destroyed) {
     for (const c of destroyed) {
@@ -203,17 +210,20 @@ export function createRenderer(root, map, players) {
   }
 
   function playerEl(id) {
-    let node = playerEls.get(id);
-    if (node) return node;
-    node = el('sprite player');
+    let entry = playerEls.get(id);
+    if (entry) return entry;
+    const node = el('sprite player');
     node.style.background = colorById.get(id) || '#ffffff';
     const name = document.createElement('span');
     name.className = 'player-name';
     name.textContent = nameById.get(id) || '';
     node.appendChild(name);
     entityLayer.appendChild(node);
-    playerEls.set(id, node);
-    return node;
+    // `dir`/`moving`/`invuln` mirror the last writes to `node`, so the loop can
+    // skip attributes that did not change this frame.
+    entry = { node, dir: null, moving: null, invuln: null };
+    playerEls.set(id, entry);
+    return entry;
   }
 
   /**
@@ -250,26 +260,43 @@ export function createRenderer(root, map, players) {
     render(now) {
       const s = sample(now);
       if (!s) return;
-      const previous = new Map(s.from.players.map(p => [p.id, p]));
-      const seen = new Set();
+      prevById.clear();
+      for (const p of s.from.players) prevById.set(p.id, p);
+      seenIds.clear();
       for (const p of s.to.players) {
-        seen.add(p.id);
-        const node = playerEl(p.id);
-        const from = previous.get(p.id) || p;
+        seenIds.add(p.id);
+        const entry = playerEl(p.id);
+        const { node } = entry;
+        const from = prevById.get(p.id) || p;
         place(node, lerp(from.x, p.x, s.t), lerp(from.y, p.y, s.t));
-        node.dataset.dir = p.dir;
-        node.classList.toggle('moving', Boolean(p.moving));
-        node.classList.toggle('invuln', p.respawnUntil != null);
+
+        // Only touch the DOM when a discrete flag actually changed.
+        if (entry.dir !== p.dir) {
+          entry.dir = p.dir;
+          node.dataset.dir = p.dir;
+        }
+        const moving = Boolean(p.moving);
+        if (entry.moving !== moving) {
+          entry.moving = moving;
+          node.classList.toggle('moving', moving);
+        }
+        const invuln = p.respawnUntil != null;
+        if (entry.invuln !== invuln) {
+          entry.invuln = invuln;
+          node.classList.toggle('invuln', invuln);
+        }
       }
-      for (const [id, node] of playerEls) {
-        if (seen.has(id)) continue;
-        node.remove();
+      for (const [id, entry] of playerEls) {
+        if (seenIds.has(id)) continue;
+        entry.node.remove();
         playerEls.delete(id);
       }
     },
 
     destroy() {
       buffer.length = 0;
+      prevById.clear();
+      seenIds.clear();
       root.replaceChildren();
       bombEls.clear();
       flameEls.clear();
