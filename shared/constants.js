@@ -8,7 +8,7 @@
 export const MAX_PLAYERS = 4;
 export const MIN_PLAYERS_TO_START = 2;
 export const START_LIVES = 3;
-export const MATCH_END_RESET_MS = 4_000; // how long the result stays on screen before the room reopens
+export const MATCH_END_RESET_MS = 6_000; // result stays on screen this long, then the room reopens
 
 // ---- Map ------------------------------------------------------------------
 export const MAP_COLS = 15;

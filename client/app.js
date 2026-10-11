@@ -11,6 +11,7 @@
  * doing that 60x/s would trash the frame budget.
  */
 import { createApp, createRouter } from '../framework/index.js';
+import { MATCH_END_RESET_MS } from '../shared/constants.js';
 import { MSG } from '../shared/protocol.js';
 import { createSession } from './game/session.js';
 import { createSocket } from './net/socket.js';
@@ -30,6 +31,7 @@ const app = createApp({
     countdown: null,
     chat: [],
     winnerId: null,
+    lobbyIn: 0, // seconds left on the game-over screen before the lobby
   },
   view,
 });
@@ -42,8 +44,36 @@ function protect(screen) {
 }
 
 function leaveGame(screen) {
+  stopLobbyTimer();
   session.stop();
   app.setState({ screen: protect(screen) });
+}
+
+// The result screen counts down to the automatic return. The room itself
+// reopens on the server's timer (see server/net.js), so this countdown is
+// cosmetic — but it also navigates at zero. A throttled background tab can stall
+// the interval, in which case the server's `lobby` broadcast still arrives and
+// performs the same navigation.
+let lobbyTimer = null;
+
+function stopLobbyTimer() {
+  if (!lobbyTimer) return;
+  clearInterval(lobbyTimer);
+  lobbyTimer = null;
+}
+
+function startLobbyTimer() {
+  stopLobbyTimer();
+  let left = Math.ceil(MATCH_END_RESET_MS / 1000);
+  app.setState({ lobbyIn: left });
+  lobbyTimer = setInterval(() => {
+    left -= 1;
+    app.setState({ lobbyIn: Math.max(0, left) });
+    if (left <= 0) {
+      stopLobbyTimer();
+      router.navigate('/waiting');
+    }
+  }, 1000);
 }
 
 const router = createRouter({
@@ -120,6 +150,7 @@ function handleServerMessage(msg) {
 
     case MSG.GAME_START:
       // The framework builds the empty board/HUD, then the rAF layer takes over.
+      stopLobbyTimer();
       app.setState({ winnerId: null }); // a new match clears the previous result
       router.navigate('/game');
       session.start({
@@ -144,6 +175,7 @@ function handleServerMessage(msg) {
     case MSG.GAME_OVER:
       app.setState({ winnerId: msg.winnerId });
       router.navigate('/gameover');
+      startLobbyTimer();
       break;
 
     case MSG.ERROR:
