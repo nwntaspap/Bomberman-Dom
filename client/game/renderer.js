@@ -93,7 +93,9 @@ export function createRenderer(root, map, players) {
   const nameById = new Map(players.map(p => [p.id, p.nickname]));
 
   // ---- static board: walls + destructible blocks (built once) --------------
-  const blockEls = new Map(); // "x,y" -> block tile, so it can be removed later
+  // Blocks are keyed by *pixel* position to match `snapshot.blocksDestroyed`
+  // (the server reports every entity position in px, like bombs and flames).
+  const blockEls = new Map(); // "pxX,pxY" -> block tile, so it can be removed later
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const tile = tiles[index(cols, x, y)];
@@ -101,7 +103,7 @@ export function createRenderer(root, map, players) {
       const node = el(tile === TILES.WALL ? 'tile wall' : 'tile block');
       place(node, x * T, y * T);
       tileLayer.appendChild(node);
-      if (tile === TILES.BLOCK) blockEls.set(cellKey(x, y), node);
+      if (tile === TILES.BLOCK) blockEls.set(cellKey(x * T, y * T), node);
     }
   }
 
