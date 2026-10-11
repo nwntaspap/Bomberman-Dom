@@ -137,8 +137,13 @@ function handleServerMessage(msg) {
     case MSG.LOBBY:
       app.setState({ players: msg.players, countdown: msg.countdown ?? null });
       if (msg.state === 'playing') {
-        if (app.getState().screen !== 'game') router.navigate('/game');
-      } else if (app.getState().screen !== 'waiting') {
+        // The board is entered through GAME_START (which starts the rAF
+        // session). A re-broadcast "playing" lobby — e.g. after a player left
+        // while the room is still marked playing — must not yank the result
+        // screen back into an empty game shell on the way to the lobby.
+        break;
+      }
+      if (app.getState().screen !== 'waiting') {
         router.navigate('/waiting');
       }
       break;
