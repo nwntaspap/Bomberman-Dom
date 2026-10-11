@@ -1,0 +1,116 @@
+/* client/css/screens.css — nickname / waiting / game-over screens and chat. */
+
+.screen {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-self: flex-start;
+}
+
+.title {
+  font-size: 2rem;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+/* ---- nickname ---- */
+.join-form {
+  display: flex;
+  gap: 10px;
+}
+.join-form input {
+  flex: 1;
+}
+.error {
+  color: var(--danger);
+}
+
+/* ---- waiting ---- */
+.counter {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.countdown {
+  font-size: 2.5rem;
+  text-align: center;
+  color: var(--danger);
+  border: 2px dashed var(--danger);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.countdown small {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.player-list {
+  list-style: none;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.player-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.player-list .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.player-list .me {
+  font-weight: 700;
+}
+
+/* ---- chat ---- */
+.chat {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat h2 {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.chat-messages {
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+.chat-messages strong {
+  color: var(--accent);
+}
+.chat-form {
+  display: flex;
+  gap: 8px;
+}
+.chat-form input {
+  flex: 1;
+}
+
+/* ---- game over ---- */
+.gameover .result {
+  font-size: 1.6rem;
+}

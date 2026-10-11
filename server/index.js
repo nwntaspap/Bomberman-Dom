@@ -15,9 +15,11 @@ const ROOT = resolve(here, '..');
 const PORT = Number(process.env.PORT) || 3001;
 
 // The client is a History-API SPA, so unknown navigation paths fall back to
-// the app entry point (e.g. refreshing on /game).
+// the app entry point (e.g. refreshing on /game). `shared` is served too
+// because the client's native ESM imports pull the protocol/constants from it
+// (pure logic only — no server internals).
 const serveStatic = createStaticHandler(ROOT, {
-  allow: ['client', 'framework'],
+  allow: ['client', 'framework', 'shared'],
   fallback: resolve(ROOT, 'client/index.html'),
 });
 

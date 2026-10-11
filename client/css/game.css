@@ -1,0 +1,3 @@
+/* client/css/game.css — the game screen (board + HUD).
+ * The board DOM (tiles, sprites) is built imperatively by the renderer in
+ * Phase 5; this file will hold its geometry and layer rules. */
