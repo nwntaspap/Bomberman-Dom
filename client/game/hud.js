@@ -26,7 +26,7 @@ function chip(label) {
  * @param {HTMLElement} root - the empty `.hud` element built by the framework
  * @param {Array<{id: number, nickname: string, color: string}>} players - roster meta
  * @param {number} you - this client's player id
- * @returns {{ setSnapshot: (snap: object) => void, setFps: (fps: number) => void, destroy: () => void }}
+ * @returns {{ setSnapshot: (snap: object) => void, setFps: (fps: number) => void, markEliminated: (id: number) => void, destroy: () => void }}
  */
 export function createHud(root, players, you) {
   const roster = el('div', 'hud-players');
@@ -83,6 +83,18 @@ export function createHud(root, players, you) {
       if (rounded === shownFps) return; // only touch the DOM when the number changes
       shownFps = rounded;
       fpsNode.textContent = `${rounded} fps`;
+    },
+
+    /**
+     * An eliminated player stops appearing in snapshots (see server/game.js),
+     * so `setSnapshot` can never zero their hearts — this is the explicit
+     * signal that does it.
+     */
+    markEliminated(id) {
+      const entry = rows.get(id);
+      if (!entry || entry.row.classList.contains('out')) return;
+      entry.hearts.textContent = '♡'.repeat(START_LIVES);
+      entry.row.classList.add('out');
     },
 
     destroy() {

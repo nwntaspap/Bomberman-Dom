@@ -363,6 +363,17 @@ test('losing all lives eliminates a player; the last one standing wins', () => {
   assert.equal(lastOf(ws[0], MSG.SNAPSHOT).state, 'over');
 });
 
+test('elimination is announced to every client (dead players vanish from snapshots)', () => {
+  const { match, players, ws } = makeMatch({ n: 2 });
+
+  match.debug.damage(players[1].id);
+  match.debug.damage(players[1].id);
+  assert.equal(lastOf(ws[0], MSG.ELIMINATED), undefined); // one life left: no event yet
+
+  match.debug.damage(players[1].id);
+  for (const w of ws) assert.equal(lastOf(w, MSG.ELIMINATED).id, players[1].id);
+});
+
 test('everyone dying in the same blast ends in a draw', () => {
   const { match, clock, players, ws } = makeMatch({ n: 2 });
 

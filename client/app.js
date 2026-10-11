@@ -120,6 +120,7 @@ function handleServerMessage(msg) {
 
     case MSG.GAME_START:
       // The framework builds the empty board/HUD, then the rAF layer takes over.
+      app.setState({ winnerId: null }); // a new match clears the previous result
       router.navigate('/game');
       session.start({
         boardEl: document.querySelector('.board'),
@@ -133,6 +134,16 @@ function handleServerMessage(msg) {
     case MSG.SNAPSHOT:
       // Per-frame state: goes straight to the renderer/HUD, never to setState.
       session.handleSnapshot(msg);
+      break;
+
+    case MSG.ELIMINATED:
+      // Elimination is not inferable from snapshots (dead players are omitted).
+      session.markEliminated(msg.id);
+      break;
+
+    case MSG.GAME_OVER:
+      app.setState({ winnerId: msg.winnerId });
+      router.navigate('/gameover');
       break;
 
     case MSG.ERROR:

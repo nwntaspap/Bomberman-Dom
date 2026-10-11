@@ -17,7 +17,7 @@ import { createRenderer } from './renderer.js';
  * @param {object} options
  * @param {(msg: {type: string, [k: string]: unknown}) => void} options.send
  *   sends a protocol message (used for inputs + bomb placement).
- * @returns {{ start: (config: object) => void, handleSnapshot: (snap: object) => void, stop: () => void }}
+ * @returns {{ start: (config: object) => void, handleSnapshot: (snap: object) => void, markEliminated: (id: number) => void, stop: () => void }}
  */
 export function createSession({ send }) {
   let engine = null;
@@ -64,6 +64,11 @@ export function createSession({ send }) {
       if (!renderer) return;
       renderer.setSnapshot(snap);
       hud.setSnapshot(snap);
+    },
+
+    /** A player ran out of lives: their HUD row reads as "out" from now on. */
+    markEliminated(id) {
+      if (hud) hud.markEliminated(id);
     },
 
     stop,

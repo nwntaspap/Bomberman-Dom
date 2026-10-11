@@ -8,8 +8,7 @@
 
 export const MSG = Object.freeze({
   // client → server
-  JOIN: 'join', // { nickname }
-  LEAVE: 'leave', // (implicit on disconnect)
+  JOIN: 'join', // { nickname } — leaving is implicit on disconnect
   CHAT: 'chat', // { text }
   INPUT: 'input', // { dir, moving } — e.g. { dir: 'up', moving: true }
   PLACE_BOMB: 'placeBomb', // {}
@@ -26,9 +25,11 @@ export const MSG = Object.freeze({
   // powerups: [{ id, x, y (px), type }] · state: 'running' | 'over'
   // Removed entities (exploded bombs, picked-up powerups) are inferred from
   // their absence in the next snapshot; no explicit remove messages.
-  LIFE_LOST: 'lifeLost', // { id, livesLeft } — optional; snapshots already carry lives
-  ELIMINATED: 'eliminated', // { id } — optional; snapshots already carry alive
-  GAME_OVER: 'gameOver', // { winnerId }
+  LIFE_LOST: 'lifeLost', // { id, livesLeft } — unused; snapshots already carry lives
+  // { id } — sent when a player runs out of lives. Dead players are omitted
+  // from snapshots, so this is the only signal that their last life is gone.
+  ELIMINATED: 'eliminated',
+  GAME_OVER: 'gameOver', // { winnerId } — null on a draw
   ERROR: 'error', // { code, message }
 });
 

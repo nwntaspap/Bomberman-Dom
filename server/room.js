@@ -258,8 +258,6 @@ export function createRoom({ now = Date.now, tickMs = 100, onMatchReady = null }
     destroy,
     broadcastLobby,
     getState: () => state,
-    getPlayers: playerList,
     getRoster,
-    playerCount: () => players.size,
   };
 }

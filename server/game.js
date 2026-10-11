@@ -139,6 +139,11 @@ export function createMatch({
     if (ws && ws.readyState === OPEN) ws.send(pack(msg.type, msg));
   }
 
+  /** Roster-level event (elimination, game over): sent to every player. */
+  function broadcast(msg) {
+    for (const p of players) send(p.ws, msg);
+  }
+
   function moveSpeed(player) {
     return Math.max(MIN_MOVE_MS, BASE_MOVE_MS - SPEED_STEP_MS * player.speedLevel);
   }
@@ -377,6 +382,10 @@ export function createMatch({
       p.tx = null;
       p.ty = null;
       p.moveUntil = 0;
+      // Eliminated players are dropped from snapshots, so the client can't
+      // infer the final life loss from them — announce it explicitly (the HUD
+      // would otherwise freeze on the last snapshot the player appeared in).
+      broadcast({ type: MSG.ELIMINATED, id: p.id });
     } else {
       const spawn = map.spawns[p.slot] ?? map.spawns[0];
       placeAt(p, spawn.x, spawn.y);
@@ -447,7 +456,7 @@ export function createMatch({
       timer = null;
     }
     broadcastSnapshot(now(), true);
-    for (const p of players) send(p.ws, { type: MSG.GAME_OVER, winnerId });
+    broadcast({ type: MSG.GAME_OVER, winnerId });
     if (onEnd) onEnd({ winnerId });
   }
 
