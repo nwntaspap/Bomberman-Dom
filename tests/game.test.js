@@ -404,6 +404,25 @@ test('a full four-player match can be simulated to completion', () => {
 
 // ---- snapshot shape -----------------------------------------------------------
 
+test('snapshots report sub-tile positions while a step is in flight', () => {
+  const { match, clock, players, ws } = makeMatch({ n: 1 });
+
+  match.handleInput(players[0].id, { dir: 'right', moving: true });
+  clock.advance(BASE_MOVE_MS / 2);
+  match.tick(); // t=70: step (1,1)→(2,1) starts
+  clock.advance(BASE_MOVE_MS / 2);
+  match.tick(); // t=140: halfway between the two cells
+
+  const mid = lastOf(ws[0], MSG.SNAPSHOT).players.find(p => p.id === players[0].id);
+  assert.equal(mid.x, 48); // 32 + (64 - 32) * 0.5 — not snapped to the source cell
+  assert.equal(mid.y, 32);
+
+  clock.advance(BASE_MOVE_MS / 2);
+  match.tick(); // t=210: landed on (2,1)
+  const landed = lastOf(ws[0], MSG.SNAPSHOT).players.find(p => p.id === players[0].id);
+  assert.equal(landed.x, 64);
+});
+
 test('snapshots carry the full entity state and monotonic ticks', () => {
   const map = mkMap(15, 13, { blockAt: [[3, 1]] });
   const { match, clock, players, ws } = makeMatch({ n: 2, map, rng: seq(0, 0) });

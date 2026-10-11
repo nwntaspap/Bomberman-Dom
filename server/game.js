@@ -119,6 +119,7 @@ export function createMatch({
       y: 0,
       tx: null,
       ty: null,
+      moveStart: 0,
       moveUntil: 0,
       // defense / counters
       invulnUntil: 0,
@@ -167,9 +168,28 @@ export function createMatch({
     const tx = player.cx + dx;
     const ty = player.cy + dy;
     if (!passable(player, tx, ty)) return;
+    const startedAt = now();
     player.tx = tx;
     player.ty = ty;
-    player.moveUntil = now() + moveSpeed(player);
+    player.moveStart = startedAt;
+    player.moveUntil = startedAt + moveSpeed(player);
+  }
+
+  /**
+   * Pixel position a player should be drawn at right now. While a step is in
+   * flight the client is lerping between snapshots, so the server reports the
+   * sub-tile position along that step (px floats) instead of snapping to the
+   * source cell until the step lands — otherwise 30 Hz snapshots would look
+   * like full-tile teleports.
+   */
+  function renderPos(player, t) {
+    if (player.tx === null) return { x: player.x, y: player.y };
+    const span = player.moveUntil - player.moveStart;
+    const progress = span <= 0 ? 1 : Math.min(1, Math.max(0, (t - player.moveStart) / span));
+    return {
+      x: player.x + (px(player.tx) - player.x) * progress,
+      y: player.y + (px(player.ty) - player.y) * progress,
+    };
   }
 
   // ---- inputs ---------------------------------------------------------------
@@ -383,17 +403,20 @@ export function createMatch({
       state: over ? 'over' : 'running',
       players: players
         .filter(p => p.alive)
-        .map(p => ({
-          id: p.id,
-          x: Math.round(p.x),
-          y: Math.round(p.y),
-          dir: p.dir,
-          moving: p.moving,
-          lives: p.lives,
-          alive: true,
-          respawnUntil: p.invulnUntil > t ? p.invulnUntil : null,
-          powerups: { bombs: p.maxBombs, flames: p.flameRange, speed: p.speedLevel },
-        })),
+        .map(p => {
+          const pos = renderPos(p, t);
+          return {
+            id: p.id,
+            x: Math.round(pos.x),
+            y: Math.round(pos.y),
+            dir: p.dir,
+            moving: p.moving,
+            lives: p.lives,
+            alive: true,
+            respawnUntil: p.invulnUntil > t ? p.invulnUntil : null,
+            powerups: { bombs: p.maxBombs, flames: p.flameRange, speed: p.speedLevel },
+          };
+        }),
       bombs: [...bombs.values()].map(b => ({
         id: b.id,
         x: px(b.cx),

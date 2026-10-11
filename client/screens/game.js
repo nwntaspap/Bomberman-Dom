@@ -1,17 +1,20 @@
 /**
- * client/screens/game.js — the game screen.
+ * client/screens/game.js — the game screen shell.
  *
- * Phase 3: a shell/placeholder. Phase 5 replaces the placeholder with the
- * rAF-driven board renderer (build once + transform updates).
+ * The framework builds only the *structure*: an empty `.hud`, an empty `.board`
+ * and the chat. The rAF layer (`client/game/session.js`) owns everything inside
+ * `.hud` and `.board` afterwards — this view never re-renders per frame, so the
+ * board's DOM survives every `setState` (e.g. a new chat message).
  */
 import { h } from '../../framework/index.js';
 import { chatView } from '../chat.js';
 
 export function gameScreen(state, actions) {
   return h('div', { class: 'screen game' }, [
-    h('h1', { class: 'title' }, ['Game on!']),
-    h('p', { class: 'hint' }, ['The board renderer lands here in Phase 5.']),
-    h('p', { class: 'hint' }, [`Players: ${state.players.map(p => p.nickname).join(', ') || '—'}`]),
+    h('div', { class: 'game-main' }, [
+      h('div', { class: 'hud' }),
+      h('div', { class: 'board-wrap' }, [h('div', { class: 'board' })]),
+    ]),
     chatView(state.chat, actions.sendChat),
   ]);
 }

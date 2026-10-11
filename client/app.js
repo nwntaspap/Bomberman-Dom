@@ -5,13 +5,14 @@
  * over): the view is a pure function of the store's state, and WebSocket
  * messages from the server call setState() and navigate().
  *
- * NOTE: the game BOARD is intentionally NOT rendered through this view — it
- * gets its own requestAnimationFrame loop + direct-DOM renderer in Phase 5.
- * The framework re-runs the whole view on every setState(); doing that 60x/s
- * would trash the frame budget.
+ * NOTE: the game BOARD is intentionally NOT rendered through this view — it is
+ * owned by its own requestAnimationFrame loop + direct-DOM renderer
+ * (client/game/*). The framework re-runs the whole view on every setState();
+ * doing that 60x/s would trash the frame budget.
  */
 import { createApp, createRouter } from '../framework/index.js';
 import { MSG } from '../shared/protocol.js';
+import { createSession } from './game/session.js';
 import { createSocket } from './net/socket.js';
 import { gameScreen } from './screens/game.js';
 import { gameoverScreen } from './screens/gameover.js';
@@ -34,16 +35,22 @@ const app = createApp({
 });
 
 // URL ↔ screen. `protect` keeps an un-joined visitor on the nickname screen
-// (e.g. a refresh on /waiting while disconnected).
+// (e.g. a refresh on /waiting while disconnected). Leaving the game screen also
+// tears down the rAF layer, so it never keeps rendering into a detached DOM.
 function protect(screen) {
   return app.getState().me ? screen : 'nickname';
 }
 
+function leaveGame(screen) {
+  session.stop();
+  app.setState({ screen: protect(screen) });
+}
+
 const router = createRouter({
-  '/': () => app.setState({ screen: 'nickname' }),
-  '/waiting': () => app.setState({ screen: protect('waiting') }),
+  '/': () => leaveGame('nickname'),
+  '/waiting': () => leaveGame('waiting'),
   '/game': () => app.setState({ screen: protect('game') }),
-  '/gameover': () => app.setState({ screen: protect('gameover') }),
+  '/gameover': () => leaveGame('gameover'),
 });
 
 // ---- actions passed to the screens -----------------------------------------
@@ -80,6 +87,11 @@ const socket = createSocket({
   },
 });
 
+// The per-frame game layer (board renderer + HUD + one rAF loop + keyboard
+// input). It is started by `gameStart` and fed every `snapshot`; it never goes
+// through the framework store.
+const session = createSession({ send: msg => socket.send(msg) });
+
 function handleServerMessage(msg) {
   switch (msg.type) {
     case MSG.WELCOME:
@@ -107,8 +119,20 @@ function handleServerMessage(msg) {
       break;
 
     case MSG.GAME_START:
-      // Phase 4 will send the map with this message; for now just move in.
+      // The framework builds the empty board/HUD, then the rAF layer takes over.
       router.navigate('/game');
+      session.start({
+        boardEl: document.querySelector('.board'),
+        hudEl: document.querySelector('.hud'),
+        map: msg.map,
+        players: msg.players,
+        you: msg.you,
+      });
+      break;
+
+    case MSG.SNAPSHOT:
+      // Per-frame state: goes straight to the renderer/HUD, never to setState.
+      session.handleSnapshot(msg);
       break;
 
     case MSG.ERROR:

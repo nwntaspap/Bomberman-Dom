@@ -51,3 +51,10 @@ export const PLAYER_COLORS = Object.freeze(['#2ecc71', '#3498db', '#e74c3c', '#f
 
 // ---- Networking ---------------------------------------------------------------
 export const WS_PATH = '/ws';
+
+// ---- Client interpolation (renderer, Phase 5) -------------------------------
+// See docs/specs/netcode-timings.md: render ~1 snapshot behind the newest one
+// and lerp entity positions between the two buffered snapshots that bracket the
+// render time.
+export const INTERP_DELAY_MS = 33;
+export const SNAPSHOT_BUFFER_MAX = 3;
