@@ -33,8 +33,9 @@ question (bonus features are explicitly out of scope for now).
 | Typecheck             | None (plain JS) — rely on ESLint + Prettier             |
 | Front-end build step  | None (native ES modules, like the framework)            |
 
-**Still to lock (via `/architect` before Phase 4):** exact simulation rate,
-snapshot broadcast rate, and interpolation/extrapolation strategy.
+**Resolved:** simulation rate, snapshot rate, and interpolation strategy are
+locked at 30 Hz / 30 Hz with 33 ms linear interpolation — see
+`docs/specs/netcode-timings.md`.
 
 ## 3. The critical architecture decision — dual rendering
 
